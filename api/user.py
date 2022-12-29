@@ -9,6 +9,7 @@ class UpdateUserModel(BaseModel):
     id: int
     name: str
     email: str
+    password: str
 
 @router .get("/getallusers")
 def get_users():
