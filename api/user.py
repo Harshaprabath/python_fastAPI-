@@ -1,18 +1,9 @@
 from fastapi import HTTPException, Path, APIRouter
 from pydantic import BaseModel
-import pymysql
+
+from db import connection
 
 router = APIRouter()
-
-def connection():
-    # Connect to the database
-    conn = pymysql.connect(host='localhost',
-                           user='root',
-                           password='',
-                           db='userdb',
-                           charset='utf8mb4',
-                           cursorclass=pymysql.cursors.DictCursor)
-    return conn.cursor()
 
 class UpdateUserModel(BaseModel):
     id: int
@@ -21,7 +12,7 @@ class UpdateUserModel(BaseModel):
 
 @router .get("/getallusers")
 def get_users():
-    dbc = connection()
+    dbc = connection.connection()
     try:
         sql = 'SELECT * FROM users'
         dbc.execute(sql)
@@ -34,7 +25,7 @@ def get_users():
 
 @router .post("/users")
 def create_user(name: str, email: str, password: str):
-    dbc = connection()
+    dbc = connection.connection()
     try:
         sql = 'INSERT INTO `users` (`name`, `email`, `password`) VALUES (%s, %s, %s)'
         dbc.execute(sql, (name, email, password))
@@ -50,7 +41,7 @@ def create_user(name: str, email: str, password: str):
 
 @router .delete("/users/{user_id}")
 def delete_user(user_id: int = Path(..., title="The ID of the user to delete")):
-    dbc = connection()
+    dbc = connection.connection()
     try:
         sql = 'DELETE FROM users WHERE id=%s'
         dbc.execute(sql, (user_id,))
@@ -64,7 +55,7 @@ def delete_user(user_id: int = Path(..., title="The ID of the user to delete")):
 
 @router .get("/getuser/{user_id}")
 def get_user(user_id: int):
-    dbc = connection()
+    dbc = connection.connection()
 
     # Execute the SELECT query
     dbc.execute(f"SELECT * FROM users WHERE id = {user_id}")
@@ -81,7 +72,7 @@ def get_user(user_id: int):
 
 @router.put("/user/{user_id}")
 def update_user(user_id: int, new_username: str, new_email: str,new_password: str):
-    dbc = connection()
+    dbc = connection.connection()
 
     sql = "UPDATE users SET name=%s, email=%s, password=%s WHERE id=%s"
     dbc.execute(sql, (new_username, new_email, new_password, user_id))
