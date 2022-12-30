@@ -1,6 +1,5 @@
 from fastapi import Path, APIRouter
 
-from db import connection
 from model.user import UserModel
 from service.user import save, getAll, delete, getuser
 
