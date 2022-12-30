@@ -1,17 +1,12 @@
 from fastapi import HTTPException, Path, APIRouter
-from pydantic import BaseModel
 
 from db import connection
+from model.user import UserModel
 
 router = APIRouter()
 
-class UpdateUserModel(BaseModel):
-    id: int
-    name: str
-    email: str
-    password: str
 
-@router .get("/getallusers")
+@router .get("/user/getall")
 def get_users():
     dbc = connection.connection()
     try:
@@ -24,23 +19,16 @@ def get_users():
     finally:
         dbc.close()
 
-@router .post("/users")
-def create_user(name: str, email: str, password: str):
+@router.post("/user/save")
+def create_user(user: UserModel):
     dbc = connection.connection()
-    try:
-        sql = 'INSERT INTO `users` (`name`, `email`, `password`) VALUES (%s, %s, %s)'
-        dbc.execute(sql, (name, email, password))
+    sql = 'INSERT INTO users (name, email, password) VALUES (%s, %s, %s)'
+    dbc.execute(sql, (user.name, user.email, user.password))
+    dbc.connection.commit()
+    dbc.close()
+    return {"message": "success saved"}
 
-        dbc.connection.commit()
-
-        return {'id': dbc.lastrowid}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-
-        dbc.close()
-
-@router .delete("/users/{user_id}")
+@router .delete("/user/delete/{user_id}")
 def delete_user(user_id: int = Path(..., title="The ID of the user to delete")):
     dbc = connection.connection()
     try:
@@ -54,7 +42,7 @@ def delete_user(user_id: int = Path(..., title="The ID of the user to delete")):
     finally:
         dbc.close()
 
-@router .get("/getuser/{user_id}")
+@router.get("/user/getuser/{user_id}")
 def get_user(user_id: int):
     dbc = connection.connection()
 
@@ -71,11 +59,16 @@ def get_user(user_id: int):
     # Return the result
     return user
 
-@router.put("/user/{user_id}")
-def update_user(user_id: int, new_username: str, new_email: str,new_password: str):
+@router.put("/user/edit")
+def update_user(user: UserModel):
     dbc = connection.connection()
 
     sql = "UPDATE users SET name=%s, email=%s, password=%s WHERE id=%s"
-    dbc.execute(sql, (new_username, new_email, new_password, user_id))
+    dbc.execute(sql, (user.name, user.email, user.password, user.id))
     dbc.connection.commit()
-    return {"message": "User updated successfully"}
+    dbc.close()
+    return {"status": "User updated successfully"}
+
+
+
+
